@@ -1,17 +1,15 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-<title>Exemplo PHP</title>
+    <meta charset="UTF-8">
+    <title>Cadastro de Aluno</title>
 </head>
 <body>
 
 <?php
 ini_set("display_errors", 1);
-header('Content-Type: text/html; charset=iso-8859-1');
 
-
-
-echo 'Versao Atual do PHP: ' . phpversion() . '<br>';
+echo 'Versão Atual do PHP: ' . phpversion() . '<br>';
 
 $servername = "54.234.153.24";
 $username = "root";
@@ -19,30 +17,41 @@ $password = "Senha123";
 $database = "meubanco";
 
 // Criar conexão
-
-
 $link = new mysqli($servername, $username, $password, $database);
 
-/* check connection */
-if (mysqli_connect_errno()) {
-    printf("Connect failed: %s\n", mysqli_connect_error());
-    exit();
+// Verificar a conexão
+if ($link->connect_error) {
+    die("Erro na conexão com o banco de dados: " . $link->connect_error);
 }
 
-$valor_rand1 =  rand(1, 999);
-$valor_rand2 = strtoupper(substr(bin2hex(random_bytes(4)), 1));
+// Gerar dados para o novo aluno
+$nome = "Aluno" . rand(1, 100);
+$sobrenome = "Sobrenome" . rand(1, 100);
+$endereco = "Rua Exemplo, " . rand(1, 200);
+$cidade = "Cidade Exemplo";
 $host_name = gethostname();
+$pergunta_seguranca = "Qual a sua cor favorita?";
+$resposta_seguranca = "Azul"; // Você pode gerar isso dinamicamente ou obter de um formulário
 
+// Preparar a query SQL para inserção (usando prepared statements para segurança)
+$query = "INSERT INTO dados (Nome, Sobrenome, Endereco, Cidade, Host, `Pergunta de Segurança?`, Resposta) VALUES (?, ?, ?, ?, ?, ?, ?)";
+$stmt = $link->prepare($query);
 
-$query = "INSERT INTO dados (AlunoID, Nome, Sobrenome, Endereco, Cidade, Host) VALUES ('$valor_rand1' , '$valor_rand2', '$valor_rand2', '$valor_rand2', '$valor_rand2','$host_name')";
+// Vincular os parâmetros
+$stmt->bind_param("sssssss", $nome, $sobrenome, $endereco, $cidade, $host_name, $pergunta_seguranca, $resposta_seguranca);
 
-
-if ($link->query($query) === TRUE) {
-  echo "New record created successfully";
+// Executar a query
+if ($stmt->execute()) {
+    echo "Novo registro criado com sucesso. Aluno ID gerado: " . $link->insert_id;
 } else {
-  echo "Error: " . $link->error;
+    echo "Erro ao criar o registro: " . $stmt->error;
 }
+
+// Fechar a declaração e a conexão
+$stmt->close();
+$link->close();
 
 ?>
+
 </body>
 </html>
